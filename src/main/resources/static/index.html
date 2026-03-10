@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SortBench — Algorithm Analyzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #f5f0e8;
+            --surface: #fffdf8;
+            --border: #e0d8cc;
+            --text: #1a1510;
+            --muted: #9a9080;
+            --accent1: #c0392b;
+            --accent2: #2980b9;
+            --accent3: #27ae60;
+            --accent4: #d35400;
+            --accent5: #8e44ad;
+            --ink: #2c2416;
+            --tag-bg: #f0ebe0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ─── Header ─────────────────────────────────────────────────── */
+        header {
+            background: var(--surface);
+            border-bottom: 2px solid var(--ink);
+            padding: 0 40px;
+            display: flex;
+            align-items: stretch;
+            gap: 0;
+        }
+
+        .header-brand {
+            padding: 20px 32px 20px 0;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .brand-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 36px;
+            font-weight: 900;
+            color: var(--ink);
+            line-height: 1;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-title span { color: var(--accent1); }
+
+        .brand-sub {
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 0.22em;
+            color: var(--muted);
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        .header-meta {
+            padding: 20px 32px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .header-meta span {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            color: var(--muted);
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--accent3);
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        /* ─── Layout ─────────────────────────────────────────────────── */
+        .layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            min-height: calc(100vh - 89px);
+        }
+
+        /* ─── Sidebar ─────────────────────────────────────────────────── */
+        aside {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 28px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        .section-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 0.22em;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* Size control */
+        .size-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 10px;
+        }
+        .size-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--ink);
+            line-height: 1;
+        }
+        .size-unit {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+            align-self: flex-end;
+            padding-bottom: 6px;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to right, var(--ink) 0%, var(--ink) var(--pct, 5%), var(--border) var(--pct, 5%));
+            border-radius: 2px;
+            cursor: pointer;
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px; height: 16px;
+            background: var(--ink);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        /* Type selector */
+        .type-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+        }
+
+        .type-btn {
+            padding: 10px 6px;
+            border: 1.5px solid var(--border);
+            background: transparent;
+            cursor: pointer;
+            border-radius: 4px;
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            text-align: center;
+            transition: all 0.15s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        .type-btn:hover { border-color: var(--ink); color: var(--ink); }
+        .type-btn.active {
+            border-color: var(--ink);
+            background: var(--ink);
+            color: var(--bg);
+        }
+        .type-icon { font-size: 16px; }
+
+        /* Algorithm toggles */
+        .algo-toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 9px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s;
+            margin-bottom: 6px;
+            user-select: none;
+        }
+        .algo-toggle:hover { border-color: currentColor; }
+        .algo-toggle.active { background: color-mix(in srgb, var(--c) 10%, white); }
+
+        .algo-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: var(--c);
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .algo-toggle:not(.active) .algo-dot { background: var(--border); }
+
+        .algo-name {
+            font-size: 12px;
+            font-weight: 500;
+            flex: 1;
+        }
+        .algo-toggle:not(.active) .algo-name { color: var(--muted); }
+
+        .algo-check {
+            font-size: 12px;
+            color: var(--c);
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+        .algo-toggle.active .algo-check { opacity: 1; }
+
+        /* Run button */
+        .run-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--ink);
+            color: var(--bg);
+            border: none;
+            border-radius: 4px;
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            letter-spacing: 0.15em;
+            cursor: pointer;
+            transition: all 0.15s;
+            position: relative;
+            overflow: hidden;
+        }
+        .run-btn:hover:not(:disabled) {
+            background: var(--accent1);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(192,57,43,0.3);
+        }
+        .run-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .run-btn.running {
+            background: var(--muted);
+            animation: runPulse 1.2s ease-in-out infinite;
+        }
+        @keyframes runPulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+        /* Log */
+        .log-box {
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 10px 12px;
+            height: 120px;
+            overflow-y: auto;
+            font-family: 'DM Mono', monospace;
+            font-size: 9.5px;
+            line-height: 1.9;
+            color: var(--muted);
+            background: var(--tag-bg);
+        }
+        .log-box::-webkit-scrollbar { width: 3px; }
+        .log-box::-webkit-scrollbar-thumb { background: var(--border); }
+        .log-ok { color: var(--accent3); }
+        .log-run { color: var(--accent4); font-weight: 500; }
+
+        /* ─── Main ────────────────────────────────────────────────────── */
+        main {
+            padding: 32px 40px;
+            overflow-y: auto;
+        }
+
+        /* Empty state */
+        .empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 55vh;
+            gap: 16px;
+            text-align: center;
+        }
+        .empty-headline {
+            font-family: 'Playfair Display', serif;
+            font-size: 64px;
+            font-weight: 900;
+            color: var(--border);
+            line-height: 1;
+        }
+        .empty-sub {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+            letter-spacing: 0.15em;
+        }
+
+        /* Winner banner */
+        .winner-banner {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 18px 24px;
+            border-radius: 6px;
+            margin-bottom: 32px;
+            border: 2px solid;
+            background: white;
+            animation: fadeUp 0.4s ease both;
+        }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+        .winner-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 0.2em;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+        .winner-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            font-weight: 700;
+        }
+        .winner-time {
+            font-family: 'Playfair Display', serif;
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .winner-time-unit {
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        /* Results */
+        .results-header {
+            display: grid;
+            grid-template-columns: 170px 120px 1fr 1fr 100px 80px;
+            gap: 12px;
+            padding: 6px 16px;
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 0.15em;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 8px;
+        }
+
+        .result-card {
+            display: grid;
+            grid-template-columns: 170px 120px 1fr 1fr 100px 80px;
+            gap: 12px;
+            padding: 14px 16px;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            align-items: center;
+            animation: fadeUp 0.35s ease both;
+            transition: box-shadow 0.2s;
+        }
+        .result-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+        .result-card.rank1 { border-color: var(--c); border-width: 2px; }
+
+        .algo-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rank-badge {
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            padding: 2px 7px;
+            border-radius: 20px;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-val {
+            font-family: 'DM Mono', monospace;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--ink);
+            margin-bottom: 4px;
+        }
+        .stat-bar-track {
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .stat-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+            background: var(--c, #aaa);
+            transition: width 0.7s cubic-bezier(0.16,1,0.3,1);
+        }
+
+        /* Mini bar viz */
+        .array-viz {
+            display: flex;
+            align-items: flex-end;
+            gap: 1px;
+            height: 40px;
+            width: 100%;
+        }
+
+        .cplx {
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            line-height: 1.8;
+            color: var(--muted);
+            text-align: right;
+        }
+        .cplx strong { color: var(--text); }
+
+        /* Summary cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 32px;
+        }
+
+        .summary-card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 6px;
+            padding: 18px 20px;
+            animation: fadeUp 0.5s ease both;
+        }
+
+        .summary-card .s-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 0.18em;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .summary-card .s-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 30px;
+            font-weight: 700;
+            color: var(--ink);
+            line-height: 1;
+        }
+
+        /* Complexity table */
+        .cx-section { margin-top: 32px; }
+
+        .cx-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .cx-card {
+            border: 1.5px solid var(--border);
+            border-radius: 6px;
+            padding: 14px;
+            background: var(--surface);
+            animation: fadeUp 0.5s ease both;
+        }
+
+        .cx-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--c);
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .cx-row {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            line-height: 2;
+        }
+        .cx-row .k { color: var(--muted); }
+        .cx-row .v { color: var(--text); }
+
+        @media (max-width: 960px) {
+            .layout { grid-template-columns: 1fr; }
+            aside { border-right: none; border-bottom: 1px solid var(--border); }
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
+            .cx-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-brand">
+        <div class="brand-title">Sort<span>Bench</span></div>
+        <div class="brand-sub">Algorithm Performance Analyzer</div>
+    </div>
+    <div class="header-meta">
+        <span><span class="status-dot" id="statusDot"></span><span id="statusText">Ready</span></span>
+        <span id="headerDate"></span>
+    </div>
+</header>
+
+<div class="layout">
+    <aside>
+
+        <!-- Array Size -->
+        <div>
+            <div class="section-label">Array Size</div>
+            <div class="size-display">
+                <div class="size-value" id="sizeDisplay">500</div>
+                <div class="size-unit">elements</div>
+            </div>
+            <input type="range" id="sizeRange" min="100" max="10000" step="100" value="500" />
+            <div class="range-labels"><span>100</span><span>10,000</span></div>
+        </div>
+
+        <!-- Input Type -->
+        <div>
+            <div class="section-label">Input Type</div>
+            <div class="type-options">
+                <button class="type-btn active" data-type="random">
+                    <span class="type-icon">⠿</span>RANDOM
+                </button>
+                <button class="type-btn" data-type="ascending">
+                    <span class="type-icon">↑</span>ASC
+                </button>
+                <button class="type-btn" data-type="descending">
+                    <span class="type-icon">↓</span>DESC
+                </button>
+            </div>
+        </div>
+
+        <!-- Algorithms -->
+        <div>
+            <div class="section-label">Algorithms</div>
+            <div id="algoList"></div>
+        </div>
+
+        <!-- Run -->
+        <button class="run-btn" id="runBtn">▶ &nbsp;RUN ANALYSIS</button>
+
+        <!-- Log -->
+        <div>
+            <div class="section-label">Output Log</div>
+            <div class="log-box" id="logBox"><span style="color:var(--border)">// waiting for input...</span></div>
+        </div>
+
+    </aside>
+
+    <main id="mainContent">
+        <div class="empty">
+            <div class="empty-headline">Configure<br>&amp; Run</div>
+            <div class="empty-sub">SELECT ALGORITHMS, SET SIZE, THEN CLICK RUN</div>
+        </div>
+    </main>
+</div>
+
+<script>
+    // ── Data ─────────────────────────────────────────────────────────────────────
+    const ALGORITHMS = [
+        { key: "bubble",    label: "Bubble Sort",    color: "#c0392b" },
+        { key: "selection", label: "Selection Sort", color: "#d35400" },
+        { key: "insertion", label: "Insertion Sort", color: "#27ae60" },
+        { key: "merge",     label: "Merge Sort",     color: "#2980b9" },
+        { key: "quick",     label: "Quick Sort",     color: "#8e44ad" },
+    ];
+
+    const COMPLEXITY = {
+        "Bubble Sort":    { Best:"O(n)",       Avg:"O(n²)",       Worst:"O(n²)",       Space:"O(1)" },
+        "Selection Sort": { Best:"O(n²)",      Avg:"O(n²)",       Worst:"O(n²)",       Space:"O(1)" },
+        "Insertion Sort": { Best:"O(n)",       Avg:"O(n²)",       Worst:"O(n²)",       Space:"O(1)" },
+        "Merge Sort":     { Best:"O(n log n)", Avg:"O(n log n)",  Worst:"O(n log n)",  Space:"O(n)" },
+        "Quick Sort":     { Best:"O(n log n)", Avg:"O(n log n)",  Worst:"O(n²)",       Space:"O(log n)" },
+    };
+
+    // ── State ─────────────────────────────────────────────────────────────────────
+    let arraySize = 500;
+    let arrayType = "random";
+    let selected = new Set(["bubble","selection","insertion","merge","quick"]);
+    let isRunning = false;
+
+    // ── DOM refs ──────────────────────────────────────────────────────────────────
+    const sizeRange   = document.getElementById("sizeRange");
+    const sizeDisplay = document.getElementById("sizeDisplay");
+    const logBox      = document.getElementById("logBox");
+    const runBtn      = document.getElementById("runBtn");
+    const mainContent = document.getElementById("mainContent");
+    const statusDot   = document.getElementById("statusDot");
+    const statusText  = document.getElementById("statusText");
+
+    // Date
+    document.getElementById("headerDate").textContent =
+        new Date().toLocaleDateString("en-US", { year:"numeric", month:"short", day:"numeric" });
+
+    // ── Algo toggles ──────────────────────────────────────────────────────────────
+    const algoList = document.getElementById("algoList");
+    ALGORITHMS.forEach(a => {
+        const el = document.createElement("div");
+        el.className = "algo-toggle active";
+        el.style.setProperty("--c", a.color);
+        el.style.color = a.color;
+        el.innerHTML = `
+    <div class="algo-dot"></div>
+    <span class="algo-name">${a.label}</span>
+    <span class="algo-check">✓</span>`;
+        el.addEventListener("click", () => {
+            if (selected.has(a.key)) selected.delete(a.key);
+            else selected.add(a.key);
+            el.classList.toggle("active", selected.has(a.key));
+        });
+        algoList.appendChild(el);
+    });
+
+    // ── Range slider ──────────────────────────────────────────────────────────────
+    sizeRange.addEventListener("input", () => {
+        arraySize = +sizeRange.value;
+        sizeDisplay.textContent = arraySize.toLocaleString();
+        const pct = ((arraySize - 100) / (10000 - 100) * 100).toFixed(1);
+        sizeRange.style.setProperty("--pct", pct + "%");
+    });
+    // init
+    sizeRange.style.setProperty("--pct", "4%");
+
+    // ── Type buttons ──────────────────────────────────────────────────────────────
+    document.querySelectorAll(".type-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".type-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            arrayType = btn.dataset.type;
+        });
+    });
+
+    // ── Sorting algorithms ────────────────────────────────────────────────────────
+    function generateArray(size, type) {
+        if (type === "ascending")  return Array.from({length:size}, (_,i) => i+1);
+        if (type === "descending") return Array.from({length:size}, (_,i) => size-i);
+        return Array.from({length:size}, () => Math.floor(Math.random()*9999)+1);
+    }
+
+    function bubbleSort(arr) {
+        const a=[...arr]; let comp=0,swap=0;
+        const t=performance.now();
+        for(let i=0;i<a.length;i++)
+            for(let j=0;j<a.length-i-1;j++){comp++;if(a[j]>a[j+1]){[a[j],a[j+1]]=[a[j+1],a[j]];swap++;}}
+        return {name:"Bubble Sort",time:performance.now()-t,comparisons:comp,swaps:swap,sorted:a};
+    }
+    function selectionSort(arr) {
+        const a=[...arr]; let comp=0,swap=0;
+        const t=performance.now();
+        for(let i=0;i<a.length-1;i++){let m=i;for(let j=i+1;j<a.length;j++){comp++;if(a[j]<a[m])m=j;}[a[i],a[m]]=[a[m],a[i]];swap++;}
+        return {name:"Selection Sort",time:performance.now()-t,comparisons:comp,swaps:swap,sorted:a};
+    }
+    function insertionSort(arr) {
+        const a=[...arr]; let comp=0,swap=0;
+        const t=performance.now();
+        for(let i=1;i<a.length;i++){let k=a[i],j=i-1;while(j>=0&&a[j]>k){comp++;a[j+1]=a[j];j--;swap++;}a[j+1]=k;}
+        return {name:"Insertion Sort",time:performance.now()-t,comparisons:comp,swaps:swap,sorted:a};
+    }
+    function mergeSort(arr) {
+        let comp=0; const t=performance.now();
+        function mg(l,r){const res=[];let i=0,j=0;while(i<l.length&&j<r.length){comp++;res.push(l[i]<=r[j]?l[i++]:r[j++]);}return res.concat(l.slice(i)).concat(r.slice(j));}
+        function ms(a){if(a.length<=1)return a;const m=Math.floor(a.length/2);return mg(ms(a.slice(0,m)),ms(a.slice(m)));}
+        const sorted=ms([...arr]);
+        return {name:"Merge Sort",time:performance.now()-t,comparisons:comp,swaps:0,sorted};
+    }
+    function quickSort(arr) {
+        let comp=0; const t=performance.now();
+        function pt(a,lo,hi){const pv=a[hi];let i=lo-1;for(let j=lo;j<hi;j++){comp++;if(a[j]<pv){i++;[a[i],a[j]]=[a[j],a[i]];}}[a[i+1],a[hi]]=[a[hi],a[i+1]];return i+1;}
+        function qs(a,lo,hi){if(lo<hi){const p=pt(a,lo,hi);qs(a,lo,p-1);qs(a,p+1,hi);}}
+        const a=[...arr];qs(a,0,a.length-1);
+        return {name:"Quick Sort",time:performance.now()-t,comparisons:comp,swaps:0,sorted:a};
+    }
+
+    const FN_MAP = { bubble:bubbleSort, selection:selectionSort, insertion:insertionSort, merge:mergeSort, quick:quickSort };
+
+    // ── Log helper ────────────────────────────────────────────────────────────────
+    function log(msg, cls="") {
+        const line = document.createElement("div");
+        if (cls) line.className = cls;
+        line.textContent = msg;
+        if (logBox.children[0]?.style.color) logBox.innerHTML = "";
+        logBox.appendChild(line);
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function setStatus(running) {
+        statusDot.style.background = running ? "#d35400" : "#27ae60";
+        statusText.textContent = running ? "Running..." : "Ready";
+        statusDot.style.animation = running ? "runPulse 1s ease-in-out infinite" : "none";
+    }
+
+    // ── Array viz ─────────────────────────────────────────────────────────────────
+    function makeViz(data, color) {
+        const max = Math.max(...data);
+        const pts = data.length > 70 ? data.filter((_,i) => i % Math.ceil(data.length/70) === 0) : data;
+        const viz = document.createElement("div");
+        viz.className = "array-viz";
+        pts.forEach(v => {
+            const bar = document.createElement("div");
+            bar.style.cssText = `flex:1;background:${color};height:${Math.max(2,(v/max)*40)}px;border-radius:1px 1px 0 0;opacity:0.75`;
+            viz.appendChild(bar);
+        });
+        return viz;
+    }
+
+    // ── Stat bar ──────────────────────────────────────────────────────────────────
+    function makeStatBar(value, max, color) {
+        const pct = max > 0 ? (value / max * 100).toFixed(1) : 0;
+        return `<div class="stat-bar-track"><div class="stat-bar-fill" style="width:${pct}%;--c:${color}"></div></div>`;
+    }
+
+    // ── Render results ────────────────────────────────────────────────────────────
+    function renderResults(results) {
+        if (!results.length) return;
+
+        const sorted = [...results].sort((a,b) => a.time - b.time);
+        const fastest = sorted[0];
+        const maxTime = Math.max(...results.map(r=>r.time));
+        const maxCmp  = Math.max(...results.map(r=>r.comparisons));
+        const maxSwp  = Math.max(...results.map(r=>r.swaps));
+
+        let html = "";
+
+        // Winner banner
+        html += `
+    <div class="winner-banner" style="border-color:${fastest.color};--c:${fastest.color}">
+      <div style="width:4px;height:52px;background:${fastest.color};border-radius:2px;flex-shrink:0"></div>
+      <div>
+        <div class="winner-label">FASTEST ALGORITHM</div>
+        <div class="winner-name" style="color:${fastest.color}">${fastest.name}</div>
+      </div>
+      <div style="flex:1"></div>
+      <div style="text-align:right">
+        <div class="winner-label">EXECUTION TIME</div>
+        <div class="winner-time" style="color:${fastest.color}">${fastest.time.toFixed(3)}<span class="winner-time-unit"> ms</span></div>
+      </div>
+      <div style="text-align:right;padding-left:24px;border-left:1px solid var(--border)">
+        <div class="winner-label">COMPARISONS</div>
+        <div class="winner-time" style="color:${fastest.color};font-size:26px">${fastest.comparisons.toLocaleString()}</div>
+      </div>
+    </div>`;
+
+        // Table header
+        html += `
+    <div class="section-label" style="margin-bottom:10px">Results</div>
+    <div class="results-header">
+      <span>ALGORITHM</span><span>TIME (ms)</span><span>COMPARISONS</span><span>SWAPS</span><span>ARRAY VIZ</span><span style="text-align:right">COMPLEXITY</span>
+    </div>`;
+
+        sorted.forEach((r, i) => {
+            const cx = COMPLEXITY[r.name];
+            const isFirst = i === 0;
+            const algoInfo = ALGORITHMS.find(a => a.label === r.name);
+            const color = algoInfo?.color || "#aaa";
+
+            html += `
+      <div class="result-card ${isFirst ? "rank1" : ""}" style="--c:${color};animation-delay:${i*0.06}s">
+        <div class="algo-label">
+          <div style="width:3px;height:32px;background:${color};border-radius:2px;flex-shrink:0"></div>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:${color}">${r.name}</div>
+            ${isFirst ? `<span class="rank-badge" style="background:${color}20;color:${color}">FASTEST</span>` :
+                `<span class="rank-badge" style="background:var(--tag-bg);color:var(--muted)">#${i+1}</span>`}
+          </div>
+        </div>
+        <div>
+          <div class="stat-val">${r.time.toFixed(3)}</div>
+          ${makeStatBar(r.time, maxTime, color)}
+        </div>
+        <div>
+          <div class="stat-val" style="font-size:12px">${r.comparisons.toLocaleString()}</div>
+          ${makeStatBar(r.comparisons, maxCmp, color)}
+        </div>
+        <div>
+          <div class="stat-val" style="font-size:12px">${r.swaps > 0 ? r.swaps.toLocaleString() : '<span style="color:var(--muted)">—</span>'}</div>
+          ${makeStatBar(r.swaps, maxSwp, color)}
+        </div>
+        <div id="viz-${i}"></div>
+        <div class="cplx">
+          ${cx ? Object.entries(cx).map(([k,v]) => `<div><span class="k">${k} </span><strong>${v}</strong></div>`).join("") : ""}
+        </div>
+      </div>`;
+        });
+
+        // Summary cards
+        const totalTime = results.reduce((s,r) => s+r.time, 0);
+        const totalCmp  = results.reduce((s,r) => s+r.comparisons, 0);
+        const totalSwp  = results.reduce((s,r) => s+r.swaps, 0);
+
+        html += `
+    <div class="summary-grid">
+      <div class="summary-card" style="animation-delay:0.1s">
+        <div class="s-label">Algorithms Run</div>
+        <div class="s-value">${results.length}</div>
+      </div>
+      <div class="summary-card" style="animation-delay:0.2s">
+        <div class="s-label">Total Comparisons</div>
+        <div class="s-value" style="font-size:22px">${totalCmp.toLocaleString()}</div>
+      </div>
+      <div class="summary-card" style="animation-delay:0.3s">
+        <div class="s-label">Total Swaps</div>
+        <div class="s-value" style="font-size:22px">${totalSwp.toLocaleString()}</div>
+      </div>
+      <div class="summary-card" style="animation-delay:0.4s">
+        <div class="s-label">Total CPU Time</div>
+        <div class="s-value" style="font-size:22px">${totalTime.toFixed(2)}<span style="font-size:14px;font-family:'DM Mono'">ms</span></div>
+      </div>
+    </div>`;
+
+        // Complexity reference
+        const activeAlgos = ALGORITHMS.filter(a => selected.has(a.key));
+        html += `
+    <div class="cx-section">
+      <div class="section-label">Big-O Complexity Reference</div>
+      <div class="cx-grid">
+        ${activeAlgos.map((a,i) => {
+            const cx = COMPLEXITY[a.label];
+            return `
+            <div class="cx-card" style="--c:${a.color};animation-delay:${i*0.06}s">
+              <div class="cx-name">${a.label}</div>
+              ${cx ? Object.entries(cx).map(([k,v]) => `
+                <div class="cx-row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join("") : ""}
+            </div>`;
+        }).join("")}
+      </div>
+    </div>`;
+
+        mainContent.innerHTML = html;
+
+        // Inject array visualizations (can't do in innerHTML due to canvas)
+        sorted.forEach((r, i) => {
+            const container = document.getElementById(`viz-${i}`);
+            if (container) container.appendChild(makeViz(r.sorted, r.color));
+        });
+    }
+
+    // ── Run ───────────────────────────────────────────────────────────────────────
+    runBtn.addEventListener("click", async () => {
+        if (isRunning || selected.size === 0) return;
+        isRunning = true;
+        runBtn.disabled = true;
+        runBtn.classList.add("running");
+        runBtn.textContent = "● RUNNING...";
+        setStatus(true);
+        logBox.innerHTML = "";
+
+        log(`► Generating ${arraySize.toLocaleString()} element ${arrayType} array...`, "log-run");
+        await sleep(30);
+
+        const base = generateArray(arraySize, arrayType);
+        log(`✓ Array ready. Running ${selected.size} algorithm(s).`, "log-ok");
+        await sleep(20);
+
+        const results = [];
+        for (const algo of ALGORITHMS) {
+            if (!selected.has(algo.key)) continue;
+            log(`  ↳ ${algo.label}...`);
+            await sleep(10);
+            const res = FN_MAP[algo.key](base);
+            results.push({ ...res, color: algo.color });
+            log(`    ✓ ${res.time.toFixed(3)}ms | ${res.comparisons.toLocaleString()} comparisons`, "log-ok");
+            await sleep(15);
+        }
+
+        log(`► Done. Results rendered below.`, "log-run");
+        renderResults(results);
+
+        isRunning = false;
+        runBtn.disabled = false;
+        runBtn.classList.remove("running");
+        runBtn.textContent = "▶  RUN ANALYSIS";
+        setStatus(false);
+    });
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>
