@@ -1,915 +1,700 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>SortBench — Algorithm Analyzer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne+Mono&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
     <style>
-        :root {
-            --bg: #f5f0e8;
-            --surface: #fffdf8;
-            --border: #e0d8cc;
-            --text: #1a1510;
-            --muted: #9a9080;
-            --accent1: #c0392b;
-            --accent2: #2980b9;
-            --accent3: #27ae60;
-            --accent4: #d35400;
-            --accent5: #8e44ad;
-            --ink: #2c2416;
-            --tag-bg: #f0ebe0;
+        :root{
+            --bg:#0d0d0f;
+            --surface:#141416;
+            --surface2:#1a1a1e;
+            --border:#252528;
+            --border2:#2e2e33;
+            --text:#f0f0f0;
+            --muted:#5a5a6a;
+            --muted2:#3a3a45;
+            --c1:#ff4757;
+            --c2:#ffa502;
+            --c3:#2ed573;
+            --c4:#1e90ff;
+            --c5:#a55eea;
         }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+        header{
+            position:relative;z-index:10;
+            display:flex;align-items:center;gap:0;
+            background:var(--surface);
+            border-bottom:1px solid var(--border);
+            padding:0 32px;
+        }
+        .brand{
+            padding:18px 28px 18px 0;
+            border-right:1px solid var(--border);
+            display:flex;flex-direction:column;gap:3px;
+        }
+        .brand-title{
+            font-family:'Syne',sans-serif;
+            font-size:30px;font-weight:800;
+            letter-spacing:-0.04em;line-height:1;color:var(--text);
+        }
+        .brand-title em{color:var(--c1);font-style:normal}
+        .brand-sub{
+            font-family:'Syne Mono',monospace;
+            font-size:8px;letter-spacing:0.25em;color:var(--muted);text-transform:uppercase;
+        }
+        .header-pills{display:flex;align-items:center;gap:10px;padding:0 28px}
+        .pill{
+            padding:4px 12px;border-radius:20px;
+            font-family:'Syne Mono',monospace;font-size:9px;letter-spacing:0.1em;
+            border:1px solid var(--border2);color:var(--muted);
+        }
+        .pill.live{color:var(--c3);border-color:rgba(46,213,115,0.3);background:rgba(46,213,115,0.06)}
+        .pill.live::before{content:'● ';animation:blink 1.4s ease-in-out infinite}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+        .header-spacer{flex:1}
+        .header-date{font-family:'Syne Mono',monospace;font-size:10px;color:var(--muted);padding-left:28px;border-left:1px solid var(--border)}
+        .layout{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 65px)}
+        aside{
+            background:var(--surface);border-right:1px solid var(--border);
+            padding:24px 20px;display:flex;flex-direction:column;gap:22px;overflow-y:auto;
+        }
+        .sec-label{
+            font-family:'Syne Mono',monospace;font-size:8px;letter-spacing:0.25em;
+            color:var(--muted);text-transform:uppercase;display:flex;align-items:center;gap:8px;margin-bottom:10px;
+        }
+        .sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
+        .size-row{display:flex;align-items:baseline;gap:8px;margin-bottom:12px}
+        .size-val{
+            font-family:'Syne',sans-serif;font-size:48px;font-weight:800;
+            color:var(--text);line-height:1;letter-spacing:-0.04em;
+        }
+        .size-unit{font-family:'Syne Mono',monospace;font-size:10px;color:var(--muted)}
+        input[type=range]{
+            -webkit-appearance:none;width:100%;height:2px;
+            background:linear-gradient(to right,var(--c1) 0%,var(--c1) var(--pct,30%),var(--border2) var(--pct,30%));
+            border-radius:2px;cursor:pointer;outline:none;
+        }
+        input[type=range]::-webkit-slider-thumb{
+            -webkit-appearance:none;width:14px;height:14px;
+            background:var(--c1);border-radius:50%;cursor:pointer;
+            box-shadow:0 0 10px rgba(255,71,87,0.5);transition:transform 0.1s;
+        }
+        input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.3)}
+        .range-labs{display:flex;justify-content:space-between;font-family:'Syne Mono',monospace;font-size:8px;color:var(--muted);margin-top:5px}
+        .note-badge{
+            display:inline-flex;align-items:center;gap:5px;
+            background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.25);
+            border-radius:4px;padding:4px 8px;margin-top:8px;
+            font-family:'Syne Mono',monospace;font-size:8px;color:var(--c1);letter-spacing:0.05em;
+        }
+        .type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+        .type-btn{
+            padding:10px 4px;border:1px solid var(--border2);background:transparent;cursor:pointer;
+            border-radius:6px;font-family:'Syne Mono',monospace;font-size:8px;letter-spacing:0.1em;
+            color:var(--muted);text-align:center;transition:all 0.15s;display:flex;flex-direction:column;align-items:center;gap:5px;
+        }
+        .type-btn:hover{border-color:var(--c1);color:var(--c1)}
+        .type-btn.active{border-color:var(--c1);background:rgba(255,71,87,0.1);color:var(--c1)}
+        .type-icon{font-size:18px}
+        .algo-tog{
+            display:flex;align-items:center;gap:10px;padding:10px 12px;
+            border:1px solid var(--border);border-radius:6px;cursor:pointer;
+            transition:all 0.15s;margin-bottom:5px;position:relative;overflow:hidden;
+        }
+        .algo-tog::before{content:'';position:absolute;inset:0;background:var(--c);opacity:0;transition:opacity 0.2s}
+        .algo-tog.active::before{opacity:0.07}
+        .algo-tog:hover{border-color:var(--c)}
+        .algo-dot{width:8px;height:8px;border-radius:50%;background:var(--border2);flex-shrink:0;transition:background 0.2s,box-shadow 0.2s}
+        .algo-tog.active .algo-dot{background:var(--c);box-shadow:0 0 8px var(--c)}
+        .algo-name{font-size:12px;font-weight:500;flex:1;color:var(--muted);transition:color 0.15s}
+        .algo-tog.active .algo-name{color:var(--text)}
+        .algo-check{font-size:11px;color:var(--c);opacity:0;transition:opacity 0.15s}
+        .algo-tog.active .algo-check{opacity:1}
+        .speed-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+        .speed-btn{
+            padding:7px 4px;border:1px solid var(--border2);background:transparent;cursor:pointer;
+            border-radius:6px;font-family:'Syne Mono',monospace;font-size:8px;color:var(--muted);
+            transition:all 0.15s;text-align:center;
+        }
+        .speed-btn:hover{border-color:var(--c4);color:var(--c4)}
+        .speed-btn.active{border-color:var(--c4);background:rgba(30,144,255,0.1);color:var(--c4)}
+        .run-btn{
+            width:100%;padding:14px;background:var(--c1);color:#fff;border:none;border-radius:6px;
+            font-family:'Syne Mono',monospace;font-size:12px;letter-spacing:0.15em;cursor:pointer;
+            transition:all 0.2s;box-shadow:0 0 20px rgba(255,71,87,0.25);position:relative;overflow:hidden;
+        }
+        .run-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.15),transparent);pointer-events:none}
+        .run-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 30px rgba(255,71,87,0.45)}
+        .run-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none;box-shadow:none}
+        .run-btn.running{background:var(--muted2);box-shadow:none;animation:pulse 1s ease-in-out infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+        .log-box{
+            border:1px solid var(--border);border-radius:6px;padding:10px 12px;height:130px;overflow-y:auto;
+            font-family:'Syne Mono',monospace;font-size:9px;line-height:1.9;color:var(--muted);background:#0a0a0c;
+        }
+        .log-box::-webkit-scrollbar{width:2px}
+        .log-box::-webkit-scrollbar-thumb{background:var(--border2)}
+        .log-ok{color:var(--c3)}.log-run{color:var(--c2);font-weight:500}.log-info{color:var(--c4)}
+        main{padding:28px 32px;overflow-y:auto}
+        .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:55vh;gap:16px;text-align:center}
+        .empty-headline{font-family:'Syne',sans-serif;font-size:72px;font-weight:800;color:var(--border2);line-height:1;letter-spacing:-0.05em}
+        .empty-sub{font-family:'Syne Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.2em}
+        .empty-hint{display:flex;gap:12px;margin-top:8px}
+        .hint-chip{padding:6px 14px;border:1px solid var(--border2);border-radius:20px;font-family:'Syne Mono',monospace;font-size:9px;color:var(--muted2);letter-spacing:0.1em}
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
+        /* Viz */
+        .viz-section{margin-bottom:28px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px}
+        .viz-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+        .viz-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;letter-spacing:-0.02em}
+        .viz-stats{display:flex;gap:20px}
+        .vs-item{text-align:right}
+        .vs-label{font-family:'Syne Mono',monospace;font-size:8px;letter-spacing:0.15em;color:var(--muted)}
+        .vs-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;line-height:1}
+        .legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+        .leg-item{display:flex;align-items:center;gap:6px;font-family:'Syne Mono',monospace;font-size:8px;color:var(--muted)}
+        .leg-dot{width:10px;height:10px;border-radius:3px}
+        .step-bar{
+            display:flex;gap:10px;align-items:center;padding:8px 14px;
+            background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-bottom:12px;
+            font-family:'Syne Mono',monospace;font-size:9px;
         }
-
-        /* ─── Header ─────────────────────────────────────────────────── */
-        header {
-            background: var(--surface);
-            border-bottom: 2px solid var(--ink);
-            padding: 0 40px;
-            display: flex;
-            align-items: stretch;
-            gap: 0;
-        }
-
-        .header-brand {
-            padding: 20px 32px 20px 0;
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .brand-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 36px;
-            font-weight: 900;
-            color: var(--ink);
-            line-height: 1;
-            letter-spacing: -0.02em;
-        }
-
-        .brand-title span { color: var(--accent1); }
-
-        .brand-sub {
-            font-family: 'DM Mono', monospace;
-            font-size: 9px;
-            letter-spacing: 0.22em;
-            color: var(--muted);
-            margin-top: 5px;
-            text-transform: uppercase;
-        }
-
-        .header-meta {
-            padding: 20px 32px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 4px;
-        }
-
-        .header-meta span {
-            font-family: 'DM Mono', monospace;
-            font-size: 10px;
-            color: var(--muted);
-        }
-
-        .status-dot {
-            display: inline-block;
-            width: 7px; height: 7px;
-            border-radius: 50%;
-            background: var(--accent3);
-            margin-right: 6px;
-            vertical-align: middle;
-        }
-
-        /* ─── Layout ─────────────────────────────────────────────────── */
-        .layout {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            min-height: calc(100vh - 89px);
-        }
-
-        /* ─── Sidebar ─────────────────────────────────────────────────── */
-        aside {
-            background: var(--surface);
-            border-right: 1px solid var(--border);
-            padding: 28px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 28px;
-        }
-
-        .section-label {
-            font-family: 'DM Mono', monospace;
-            font-size: 9px;
-            letter-spacing: 0.22em;
-            color: var(--muted);
-            text-transform: uppercase;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .section-label::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--border);
-        }
-
-        /* Size control */
-        .size-display {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 10px;
-        }
-        .size-value {
-            font-family: 'Playfair Display', serif;
-            font-size: 42px;
-            font-weight: 700;
-            color: var(--ink);
-            line-height: 1;
-        }
-        .size-unit {
-            font-family: 'DM Mono', monospace;
-            font-size: 11px;
-            color: var(--muted);
-            align-self: flex-end;
-            padding-bottom: 6px;
-        }
-
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(to right, var(--ink) 0%, var(--ink) var(--pct, 5%), var(--border) var(--pct, 5%));
-            border-radius: 2px;
-            cursor: pointer;
-            outline: none;
-        }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 16px; height: 16px;
-            background: var(--ink);
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-            transition: transform 0.1s;
-        }
-        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
-
-        .range-labels {
-            display: flex;
-            justify-content: space-between;
-            font-family: 'DM Mono', monospace;
-            font-size: 9px;
-            color: var(--muted);
-            margin-top: 6px;
-        }
-
-        /* Type selector */
-        .type-options {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 6px;
-        }
-
-        .type-btn {
-            padding: 10px 6px;
-            border: 1.5px solid var(--border);
-            background: transparent;
-            cursor: pointer;
-            border-radius: 4px;
-            font-family: 'DM Mono', monospace;
-            font-size: 9px;
-            letter-spacing: 0.1em;
-            color: var(--muted);
-            text-align: center;
-            transition: all 0.15s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-        }
-        .type-btn:hover { border-color: var(--ink); color: var(--ink); }
-        .type-btn.active {
-            border-color: var(--ink);
-            background: var(--ink);
-            color: var(--bg);
-        }
-        .type-icon { font-size: 16px; }
-
-        /* Algorithm toggles */
-        .algo-toggle {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 9px 12px;
-            border: 1.5px solid var(--border);
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.15s;
-            margin-bottom: 6px;
-            user-select: none;
-        }
-        .algo-toggle:hover { border-color: currentColor; }
-        .algo-toggle.active { background: color-mix(in srgb, var(--c) 10%, white); }
-
-        .algo-dot {
-            width: 10px; height: 10px;
-            border-radius: 50%;
-            background: var(--c);
-            flex-shrink: 0;
-            transition: all 0.2s;
-        }
-        .algo-toggle:not(.active) .algo-dot { background: var(--border); }
-
-        .algo-name {
-            font-size: 12px;
-            font-weight: 500;
-            flex: 1;
-        }
-        .algo-toggle:not(.active) .algo-name { color: var(--muted); }
-
-        .algo-check {
-            font-size: 12px;
-            color: var(--c);
-            opacity: 0;
-            transition: opacity 0.15s;
-        }
-        .algo-toggle.active .algo-check { opacity: 1; }
-
-        /* Run button */
-        .run-btn {
-            width: 100%;
-            padding: 15px;
-            background: var(--ink);
-            color: var(--bg);
-            border: none;
-            border-radius: 4px;
-            font-family: 'DM Mono', monospace;
-            font-size: 12px;
-            letter-spacing: 0.15em;
-            cursor: pointer;
-            transition: all 0.15s;
-            position: relative;
-            overflow: hidden;
-        }
-        .run-btn:hover:not(:disabled) {
-            background: var(--accent1);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(192,57,43,0.3);
-        }
-        .run-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-        .run-btn.running {
-            background: var(--muted);
-            animation: runPulse 1.2s ease-in-out infinite;
-        }
-        @keyframes runPulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
-
-        /* Log */
-        .log-box {
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 10px 12px;
-            height: 120px;
-            overflow-y: auto;
-            font-family: 'DM Mono', monospace;
-            font-size: 9.5px;
-            line-height: 1.9;
-            color: var(--muted);
-            background: var(--tag-bg);
-        }
-        .log-box::-webkit-scrollbar { width: 3px; }
-        .log-box::-webkit-scrollbar-thumb { background: var(--border); }
-        .log-ok { color: var(--accent3); }
-        .log-run { color: var(--accent4); font-weight: 500; }
-
-        /* ─── Main ────────────────────────────────────────────────────── */
-        main {
-            padding: 32px 40px;
-            overflow-y: auto;
-        }
-
-        /* Empty state */
-        .empty {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 55vh;
-            gap: 16px;
-            text-align: center;
-        }
-        .empty-headline {
-            font-family: 'Playfair Display', serif;
-            font-size: 64px;
-            font-weight: 900;
-            color: var(--border);
-            line-height: 1;
-        }
-        .empty-sub {
-            font-family: 'DM Mono', monospace;
-            font-size: 11px;
-            color: var(--muted);
-            letter-spacing: 0.15em;
-        }
-
-        /* Winner banner */
-        .winner-banner {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            padding: 18px 24px;
-            border-radius: 6px;
-            margin-bottom: 32px;
-            border: 2px solid;
-            background: white;
-            animation: fadeUp 0.4s ease both;
-        }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-
-        .winner-label {
-            font-family: 'DM Mono', monospace;
-            font-size: 9px;
-            letter-spacing: 0.2em;
-            color: var(--muted);
-            margin-bottom: 4px;
-        }
-        .winner-name {
-            font-family: 'Playfair Display', serif;
-            font-size: 22px;
-            font-weight: 700;
-        }
-        .winner-time {
-            font-family: 'Playfair Display', serif;
-            font-size: 36px;
-            font-weight: 700;
-            line-height: 1;
-        }
-        .winner-time-unit {
-            font-family: 'DM Mono', monospace;
-            font-size: 12px;
-            color: var(--muted);
-        }
+        .step-action{flex:1;color:var(--text);font-size:9px}
+        .step-tag{padding:3px 9px;border-radius:12px;font-size:7px;letter-spacing:0.1em}
+        .step-tag.compare{background:rgba(255,165,2,0.15);color:var(--c2);border:1px solid rgba(255,165,2,0.3)}
+        .step-tag.swap{background:rgba(255,71,87,0.15);color:var(--c1);border:1px solid rgba(255,71,87,0.3)}
+        .step-tag.pivot{background:rgba(165,94,234,0.15);color:var(--c5);border:1px solid rgba(165,94,234,0.3)}
+        .step-tag.done{background:rgba(46,213,115,0.15);color:var(--c3);border:1px solid rgba(46,213,115,0.3)}
+        .ctrl-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+        .progress-wrap{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+        .progress-fill{height:100%;border-radius:2px;transition:width 0.1s}
+        .progress-label{font-family:'Syne Mono',monospace;font-size:8px;color:var(--muted);white-space:nowrap}
+        .num-array-wrap{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px;overflow-x:auto}
+        .num-array{display:flex;gap:3px;align-items:flex-end;min-height:90px;flex-wrap:wrap;gap:3px}
+        .num-cell{display:flex;flex-direction:column;align-items:center;gap:2px;transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1)}
+        .num-bar{width:26px;min-width:26px;border-radius:3px 3px 0 0;transition:all 0.2s;position:relative}
+        .num-val{font-family:'Syne Mono',monospace;font-size:8px;color:var(--muted);transition:color 0.2s;line-height:1}
+        .num-idx{font-family:'Syne Mono',monospace;font-size:6px;color:var(--muted2);line-height:1}
+        .num-cell.comparing .num-bar{background:var(--c2)!important;box-shadow:0 0 10px rgba(255,165,2,0.5)}
+        .num-cell.comparing .num-val{color:var(--c2)}
+        .num-cell.swapping .num-bar{background:var(--c1)!important;box-shadow:0 0 12px rgba(255,71,87,0.6)}
+        .num-cell.swapping .num-val{color:var(--c1)}
+        .num-cell.sorted .num-bar{background:var(--c3)!important;box-shadow:0 0 6px rgba(46,213,115,0.3)}
+        .num-cell.sorted .num-val{color:var(--c3)}
+        .num-cell.pivot .num-bar{background:var(--c5)!important;box-shadow:0 0 12px rgba(165,94,234,0.5)}
+        .num-cell.pivot .num-val{color:var(--c5)}
 
         /* Results */
-        .results-header {
-            display: grid;
-            grid-template-columns: 170px 120px 1fr 1fr 100px 80px;
-            gap: 12px;
-            padding: 6px 16px;
-            font-family: 'DM Mono', monospace;
-            font-size: 9px;
-            letter-spacing: 0.15em;
-            color: var(--muted);
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 8px;
+        .winner-card{
+            display:flex;align-items:center;gap:20px;padding:20px 24px;border-radius:8px;
+            border:2px solid var(--c);
+            background:linear-gradient(135deg,color-mix(in srgb,var(--c) 8%,transparent),transparent);
+            margin-bottom:20px;animation:fadeUp 0.4s ease both;
         }
-
-        .result-card {
-            display: grid;
-            grid-template-columns: 170px 120px 1fr 1fr 100px 80px;
-            gap: 12px;
-            padding: 14px 16px;
-            background: var(--surface);
-            border: 1.5px solid var(--border);
-            border-radius: 6px;
-            margin-bottom: 8px;
-            align-items: center;
-            animation: fadeUp 0.35s ease both;
-            transition: box-shadow 0.2s;
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .wc-bar{width:3px;height:52px;background:var(--c);border-radius:2px;flex-shrink:0;box-shadow:0 0 12px var(--c)}
+        .wc-label{font-family:'Syne Mono',monospace;font-size:8px;letter-spacing:0.2em;color:var(--muted);margin-bottom:3px}
+        .wc-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--c);letter-spacing:-0.02em}
+        .wc-spacer{flex:1}
+        .wc-time{font-family:'Syne',sans-serif;font-size:34px;font-weight:800;line-height:1;letter-spacing:-0.03em}
+        .wc-unit{font-family:'Syne Mono',monospace;font-size:11px;color:var(--muted)}
+        .res-header{
+            display:grid;grid-template-columns:160px 110px 1fr 1fr 80px;gap:12px;padding:6px 14px;
+            font-family:'Syne Mono',monospace;font-size:8px;letter-spacing:0.15em;color:var(--muted);
+            border-bottom:1px solid var(--border);margin-bottom:6px;
         }
-        .result-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-        .result-card.rank1 { border-color: var(--c); border-width: 2px; }
-
-        .algo-label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .res-card{
+            display:grid;grid-template-columns:160px 110px 1fr 1fr 80px;gap:12px;padding:14px;
+            background:var(--surface);border:1px solid var(--border);border-radius:8px;
+            margin-bottom:6px;align-items:center;animation:fadeUp 0.3s ease both;transition:border-color 0.2s;
         }
-
-        .rank-badge {
-            font-family: 'DM Mono', monospace;
-            font-size: 9px;
-            padding: 2px 7px;
-            border-radius: 20px;
-            font-weight: 500;
-            letter-spacing: 0.05em;
-        }
-
-        .stat-val {
-            font-family: 'DM Mono', monospace;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--ink);
-            margin-bottom: 4px;
-        }
-        .stat-bar-track {
-            height: 4px;
-            background: var(--border);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        .stat-bar-fill {
-            height: 100%;
-            border-radius: 2px;
-            background: var(--c, #aaa);
-            transition: width 0.7s cubic-bezier(0.16,1,0.3,1);
-        }
-
-        /* Mini bar viz */
-        .array-viz {
-            display: flex;
-            align-items: flex-end;
-            gap: 1px;
-            height: 40px;
-            width: 100%;
-        }
-
-        .cplx {
-            font-family: 'DM Mono', monospace;
-            font-size: 9px;
-            line-height: 1.8;
-            color: var(--muted);
-            text-align: right;
-        }
-        .cplx strong { color: var(--text); }
-
-        /* Summary cards */
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-top: 32px;
-        }
-
-        .summary-card {
-            background: var(--surface);
-            border: 1.5px solid var(--border);
-            border-radius: 6px;
-            padding: 18px 20px;
-            animation: fadeUp 0.5s ease both;
-        }
-
-        .summary-card .s-label {
-            font-family: 'DM Mono', monospace;
-            font-size: 9px;
-            letter-spacing: 0.18em;
-            color: var(--muted);
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
-
-        .summary-card .s-value {
-            font-family: 'Playfair Display', serif;
-            font-size: 30px;
-            font-weight: 700;
-            color: var(--ink);
-            line-height: 1;
-        }
-
-        /* Complexity table */
-        .cx-section { margin-top: 32px; }
-
-        .cx-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            margin-top: 14px;
-        }
-
-        .cx-card {
-            border: 1.5px solid var(--border);
-            border-radius: 6px;
-            padding: 14px;
-            background: var(--surface);
-            animation: fadeUp 0.5s ease both;
-        }
-
-        .cx-name {
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--c);
-            margin-bottom: 10px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .cx-row {
-            display: flex;
-            justify-content: space-between;
-            font-family: 'DM Mono', monospace;
-            font-size: 9px;
-            line-height: 2;
-        }
-        .cx-row .k { color: var(--muted); }
-        .cx-row .v { color: var(--text); }
-
-        @media (max-width: 960px) {
-            .layout { grid-template-columns: 1fr; }
-            aside { border-right: none; border-bottom: 1px solid var(--border); }
-            .summary-grid { grid-template-columns: repeat(2, 1fr); }
-            .cx-grid { grid-template-columns: repeat(3, 1fr); }
-        }
+        .res-card:hover{border-color:var(--border2)}
+        .res-card.rank1{border-color:var(--c);border-width:1.5px}
+        .rank-label{display:flex;align-items:center;gap:8px}
+        .r-dot{width:3px;height:32px;border-radius:2px;flex-shrink:0}
+        .r-name{font-size:12px;font-weight:600}
+        .r-badge{font-family:'Syne Mono',monospace;font-size:7px;padding:2px 7px;border-radius:10px;background:rgba(255,255,255,0.06);color:var(--muted);letter-spacing:0.05em}
+        .r-badge.first{color:var(--c);background:color-mix(in srgb,var(--c) 15%,transparent)}
+        .stat-v{font-family:'Syne Mono',monospace;font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px}
+        .sbar-track{height:3px;background:var(--border2);border-radius:2px;overflow:hidden}
+        .sbar-fill{height:100%;border-radius:2px;transition:width 0.6s cubic-bezier(0.16,1,0.3,1)}
+        .cplx-col{font-family:'Syne Mono',monospace;font-size:8px;line-height:2;color:var(--muted);text-align:right}
+        .cplx-col strong{color:var(--text)}
+        .sum-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px}
+        .sum-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;animation:fadeUp 0.5s ease both}
+        .sum-card .sl{font-family:'Syne Mono',monospace;font-size:8px;letter-spacing:0.2em;color:var(--muted);margin-bottom:6px;text-transform:uppercase}
+        .sum-card .sv{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--text);line-height:1;letter-spacing:-0.03em}
+        .cx-section{margin-top:20px}
+        .cx-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
+        .cx-card{border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--surface);animation:fadeUp 0.5s ease both}
+        .cx-name{font-size:11px;font-weight:600;color:var(--c);margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid var(--border)}
+        .cx-row{display:flex;justify-content:space-between;font-family:'Syne Mono',monospace;font-size:8px;line-height:2.1}
+        .cx-row .k{color:var(--muted)}.cx-row .v{color:var(--text)}
     </style>
 </head>
 <body>
 
 <header>
-    <div class="header-brand">
-        <div class="brand-title">Sort<span>Bench</span></div>
+    <div class="brand">
+        <div class="brand-title">Sort<em>Bench</em></div>
         <div class="brand-sub">Algorithm Performance Analyzer</div>
     </div>
-    <div class="header-meta">
-        <span><span class="status-dot" id="statusDot"></span><span id="statusText">Ready</span></span>
-        <span id="headerDate"></span>
+    <div class="header-pills" style="padding-left:28px">
+        <div class="pill live" id="statusPill">Ready</div>
+        <div class="pill" id="arraySizePill">n = 20</div>
+        <div class="pill" id="maxValPill">max val = 70</div>
     </div>
+    <div class="header-spacer"></div>
+    <div class="header-date" id="headerDate"></div>
 </header>
 
 <div class="layout">
     <aside>
-
-        <!-- Array Size -->
         <div>
-            <div class="section-label">Array Size</div>
-            <div class="size-display">
-                <div class="size-value" id="sizeDisplay">500</div>
+            <div class="sec-label">Array Size</div>
+            <div class="size-row">
+                <div class="size-val" id="sizeDisplay">20</div>
                 <div class="size-unit">elements</div>
             </div>
-            <input type="range" id="sizeRange" min="100" max="10000" step="100" value="500" />
-            <div class="range-labels"><span>100</span><span>10,000</span></div>
+            <input type="range" id="sizeRange" min="5" max="50" step="1" value="20"/>
+            <div class="range-labs"><span>5</span><span>50</span></div>
+            <div class="note-badge">⬆ Values: 1 – 70 only</div>
         </div>
-
-        <!-- Input Type -->
         <div>
-            <div class="section-label">Input Type</div>
-            <div class="type-options">
-                <button class="type-btn active" data-type="random">
-                    <span class="type-icon">⠿</span>RANDOM
-                </button>
-                <button class="type-btn" data-type="ascending">
-                    <span class="type-icon">↑</span>ASC
-                </button>
-                <button class="type-btn" data-type="descending">
-                    <span class="type-icon">↓</span>DESC
-                </button>
+            <div class="sec-label">Input Type</div>
+            <div class="type-grid">
+                <button class="type-btn active" data-type="random"><span class="type-icon">⠿</span>RANDOM</button>
+                <button class="type-btn" data-type="ascending"><span class="type-icon">↑</span>ASC</button>
+                <button class="type-btn" data-type="descending"><span class="type-icon">↓</span>DESC</button>
             </div>
         </div>
-
-        <!-- Algorithms -->
         <div>
-            <div class="section-label">Algorithms</div>
+            <div class="sec-label">Algorithms</div>
             <div id="algoList"></div>
         </div>
-
-        <!-- Run -->
-        <button class="run-btn" id="runBtn">▶ &nbsp;RUN ANALYSIS</button>
-
-        <!-- Log -->
         <div>
-            <div class="section-label">Output Log</div>
-            <div class="log-box" id="logBox"><span style="color:var(--border)">// waiting for input...</span></div>
+            <div class="sec-label">Viz Speed</div>
+            <div class="speed-grid">
+                <button class="speed-btn" data-ms="600">Slow</button>
+                <button class="speed-btn active" data-ms="150">Mid</button>
+                <button class="speed-btn" data-ms="40">Fast</button>
+                <button class="speed-btn" data-ms="5">Turbo</button>
+            </div>
         </div>
-
+        <button class="run-btn" id="runBtn">▶ &nbsp;RUN ANALYSIS</button>
+        <div>
+            <div class="sec-label">Output Log</div>
+            <div class="log-box" id="logBox"><span style="color:var(--muted2)">// waiting...</span></div>
+        </div>
     </aside>
 
     <main id="mainContent">
         <div class="empty">
             <div class="empty-headline">Configure<br>&amp; Run</div>
-            <div class="empty-sub">SELECT ALGORITHMS, SET SIZE, THEN CLICK RUN</div>
+            <div class="empty-sub">SELECT ALGORITHMS · SET SIZE · CLICK RUN</div>
+            <div class="empty-hint">
+                <div class="hint-chip">📊 Live Step Viz</div>
+                <div class="hint-chip">🔢 Max val 70</div>
+                <div class="hint-chip">⚡ Compare &amp; Swap</div>
+            </div>
         </div>
     </main>
 </div>
 
 <script>
-    // ── Data ─────────────────────────────────────────────────────────────────────
-    const ALGORITHMS = [
-        { key: "bubble",    label: "Bubble Sort",    color: "#c0392b" },
-        { key: "selection", label: "Selection Sort", color: "#d35400" },
-        { key: "insertion", label: "Insertion Sort", color: "#27ae60" },
-        { key: "merge",     label: "Merge Sort",     color: "#2980b9" },
-        { key: "quick",     label: "Quick Sort",     color: "#8e44ad" },
+    const ALGORITHMS=[
+        {key:"bubble",    label:"Bubble Sort",    color:"#ff4757"},
+        {key:"selection", label:"Selection Sort", color:"#ffa502"},
+        {key:"insertion", label:"Insertion Sort", color:"#2ed573"},
+        {key:"merge",     label:"Merge Sort",     color:"#1e90ff"},
+        {key:"quick",     label:"Quick Sort",     color:"#a55eea"},
     ];
-
-    const COMPLEXITY = {
-        "Bubble Sort":    { Best:"O(n)",       Avg:"O(n²)",       Worst:"O(n²)",       Space:"O(1)" },
-        "Selection Sort": { Best:"O(n²)",      Avg:"O(n²)",       Worst:"O(n²)",       Space:"O(1)" },
-        "Insertion Sort": { Best:"O(n)",       Avg:"O(n²)",       Worst:"O(n²)",       Space:"O(1)" },
-        "Merge Sort":     { Best:"O(n log n)", Avg:"O(n log n)",  Worst:"O(n log n)",  Space:"O(n)" },
-        "Quick Sort":     { Best:"O(n log n)", Avg:"O(n log n)",  Worst:"O(n²)",       Space:"O(log n)" },
+    const COMPLEXITY={
+        "Bubble Sort":   {Best:"O(n)",      Avg:"O(n²)",      Worst:"O(n²)",      Space:"O(1)"},
+        "Selection Sort":{Best:"O(n²)",     Avg:"O(n²)",      Worst:"O(n²)",      Space:"O(1)"},
+        "Insertion Sort":{Best:"O(n)",      Avg:"O(n²)",      Worst:"O(n²)",      Space:"O(1)"},
+        "Merge Sort":    {Best:"O(n log n)",Avg:"O(n log n)", Worst:"O(n log n)", Space:"O(n)"},
+        "Quick Sort":    {Best:"O(n log n)",Avg:"O(n log n)", Worst:"O(n²)",      Space:"O(log n)"},
     };
 
-    // ── State ─────────────────────────────────────────────────────────────────────
-    let arraySize = 500;
-    let arrayType = "random";
-    let selected = new Set(["bubble","selection","insertion","merge","quick"]);
-    let isRunning = false;
+    const MAX_VAL=70;
+    let arraySize=20,arrayType="random",selected=new Set(["bubble","merge","quick"]),vizSpeedMs=150,isRunning=false;
 
-    // ── DOM refs ──────────────────────────────────────────────────────────────────
-    const sizeRange   = document.getElementById("sizeRange");
-    const sizeDisplay = document.getElementById("sizeDisplay");
-    const logBox      = document.getElementById("logBox");
-    const runBtn      = document.getElementById("runBtn");
-    const mainContent = document.getElementById("mainContent");
-    const statusDot   = document.getElementById("statusDot");
-    const statusText  = document.getElementById("statusText");
+    const sizeRange=document.getElementById("sizeRange");
+    const sizeDisplay=document.getElementById("sizeDisplay");
+    const logBox=document.getElementById("logBox");
+    const runBtn=document.getElementById("runBtn");
+    const mainContent=document.getElementById("mainContent");
+    const statusPill=document.getElementById("statusPill");
+    const arraySizePill=document.getElementById("arraySizePill");
 
-    // Date
-    document.getElementById("headerDate").textContent =
-        new Date().toLocaleDateString("en-US", { year:"numeric", month:"short", day:"numeric" });
+    document.getElementById("headerDate").textContent=new Date().toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"});
 
-    // ── Algo toggles ──────────────────────────────────────────────────────────────
-    const algoList = document.getElementById("algoList");
-    ALGORITHMS.forEach(a => {
-        const el = document.createElement("div");
-        el.className = "algo-toggle active";
-        el.style.setProperty("--c", a.color);
-        el.style.color = a.color;
-        el.innerHTML = `
-    <div class="algo-dot"></div>
-    <span class="algo-name">${a.label}</span>
-    <span class="algo-check">✓</span>`;
-        el.addEventListener("click", () => {
-            if (selected.has(a.key)) selected.delete(a.key);
-            else selected.add(a.key);
-            el.classList.toggle("active", selected.has(a.key));
+    // Build algo toggles
+    const algoListEl=document.getElementById("algoList");
+    ALGORITHMS.forEach(a=>{
+        const el=document.createElement("div");
+        el.className="algo-tog"+(selected.has(a.key)?" active":"");
+        el.style.setProperty("--c",a.color);
+        el.innerHTML=`<div class="algo-dot"></div><span class="algo-name">${a.label}</span><span class="algo-check">✓</span>`;
+        el.addEventListener("click",()=>{
+            if(selected.has(a.key))selected.delete(a.key);else selected.add(a.key);
+            el.classList.toggle("active",selected.has(a.key));
         });
-        algoList.appendChild(el);
+        algoListEl.appendChild(el);
     });
 
-    // ── Range slider ──────────────────────────────────────────────────────────────
-    sizeRange.addEventListener("input", () => {
-        arraySize = +sizeRange.value;
-        sizeDisplay.textContent = arraySize.toLocaleString();
-        const pct = ((arraySize - 100) / (10000 - 100) * 100).toFixed(1);
-        sizeRange.style.setProperty("--pct", pct + "%");
+    sizeRange.addEventListener("input",()=>{
+        arraySize=+sizeRange.value;
+        sizeDisplay.textContent=arraySize;
+        arraySizePill.textContent=`n = ${arraySize}`;
+        const pct=((arraySize-5)/(50-5)*100).toFixed(1);
+        sizeRange.style.setProperty("--pct",pct+"%");
     });
-    // init
-    sizeRange.style.setProperty("--pct", "4%");
+    sizeRange.style.setProperty("--pct","30%");
 
-    // ── Type buttons ──────────────────────────────────────────────────────────────
-    document.querySelectorAll(".type-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-            document.querySelectorAll(".type-btn").forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            arrayType = btn.dataset.type;
+    document.querySelectorAll(".type-btn").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+            document.querySelectorAll(".type-btn").forEach(b=>b.classList.remove("active"));
+            btn.classList.add("active");arrayType=btn.dataset.type;
+        });
+    });
+    document.querySelectorAll(".speed-btn").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+            document.querySelectorAll(".speed-btn").forEach(b=>b.classList.remove("active"));
+            btn.classList.add("active");vizSpeedMs=+btn.dataset.ms;
         });
     });
 
-    // ── Sorting algorithms ────────────────────────────────────────────────────────
-    function generateArray(size, type) {
-        if (type === "ascending")  return Array.from({length:size}, (_,i) => i+1);
-        if (type === "descending") return Array.from({length:size}, (_,i) => size-i);
-        return Array.from({length:size}, () => Math.floor(Math.random()*9999)+1);
+    function generateArray(size,type){
+        if(type==="ascending") return Array.from({length:size},(_,i)=>Math.max(1,Math.round((i+1)/size*MAX_VAL)));
+        if(type==="descending") return Array.from({length:size},(_,i)=>Math.max(1,Math.round((size-i)/size*MAX_VAL)));
+        return Array.from({length:size},()=>Math.floor(Math.random()*MAX_VAL)+1);
     }
 
-    function bubbleSort(arr) {
-        const a=[...arr]; let comp=0,swap=0;
-        const t=performance.now();
-        for(let i=0;i<a.length;i++)
-            for(let j=0;j<a.length-i-1;j++){comp++;if(a[j]>a[j+1]){[a[j],a[j+1]]=[a[j+1],a[j]];swap++;}}
-        return {name:"Bubble Sort",time:performance.now()-t,comparisons:comp,swaps:swap,sorted:a};
-    }
-    function selectionSort(arr) {
-        const a=[...arr]; let comp=0,swap=0;
-        const t=performance.now();
-        for(let i=0;i<a.length-1;i++){let m=i;for(let j=i+1;j<a.length;j++){comp++;if(a[j]<a[m])m=j;}[a[i],a[m]]=[a[m],a[i]];swap++;}
-        return {name:"Selection Sort",time:performance.now()-t,comparisons:comp,swaps:swap,sorted:a};
-    }
-    function insertionSort(arr) {
-        const a=[...arr]; let comp=0,swap=0;
-        const t=performance.now();
-        for(let i=1;i<a.length;i++){let k=a[i],j=i-1;while(j>=0&&a[j]>k){comp++;a[j+1]=a[j];j--;swap++;}a[j+1]=k;}
-        return {name:"Insertion Sort",time:performance.now()-t,comparisons:comp,swaps:swap,sorted:a};
-    }
-    function mergeSort(arr) {
-        let comp=0; const t=performance.now();
-        function mg(l,r){const res=[];let i=0,j=0;while(i<l.length&&j<r.length){comp++;res.push(l[i]<=r[j]?l[i++]:r[j++]);}return res.concat(l.slice(i)).concat(r.slice(j));}
-        function ms(a){if(a.length<=1)return a;const m=Math.floor(a.length/2);return mg(ms(a.slice(0,m)),ms(a.slice(m)));}
-        const sorted=ms([...arr]);
-        return {name:"Merge Sort",time:performance.now()-t,comparisons:comp,swaps:0,sorted};
-    }
-    function quickSort(arr) {
-        let comp=0; const t=performance.now();
-        function pt(a,lo,hi){const pv=a[hi];let i=lo-1;for(let j=lo;j<hi;j++){comp++;if(a[j]<pv){i++;[a[i],a[j]]=[a[j],a[i]];}}[a[i+1],a[hi]]=[a[hi],a[i+1]];return i+1;}
-        function qs(a,lo,hi){if(lo<hi){const p=pt(a,lo,hi);qs(a,lo,p-1);qs(a,p+1,hi);}}
-        const a=[...arr];qs(a,0,a.length-1);
-        return {name:"Quick Sort",time:performance.now()-t,comparisons:comp,swaps:0,sorted:a};
-    }
-
-    const FN_MAP = { bubble:bubbleSort, selection:selectionSort, insertion:insertionSort, merge:mergeSort, quick:quickSort };
-
-    // ── Log helper ────────────────────────────────────────────────────────────────
-    function log(msg, cls="") {
-        const line = document.createElement("div");
-        if (cls) line.className = cls;
-        line.textContent = msg;
-        if (logBox.children[0]?.style.color) logBox.innerHTML = "";
-        logBox.appendChild(line);
-        logBox.scrollTop = logBox.scrollHeight;
-    }
-
-    function setStatus(running) {
-        statusDot.style.background = running ? "#d35400" : "#27ae60";
-        statusText.textContent = running ? "Running..." : "Ready";
-        statusDot.style.animation = running ? "runPulse 1s ease-in-out infinite" : "none";
-    }
-
-    // ── Array viz ─────────────────────────────────────────────────────────────────
-    function makeViz(data, color) {
-        const max = Math.max(...data);
-        const pts = data.length > 70 ? data.filter((_,i) => i % Math.ceil(data.length/70) === 0) : data;
-        const viz = document.createElement("div");
-        viz.className = "array-viz";
-        pts.forEach(v => {
-            const bar = document.createElement("div");
-            bar.style.cssText = `flex:1;background:${color};height:${Math.max(2,(v/max)*40)}px;border-radius:1px 1px 0 0;opacity:0.75`;
-            viz.appendChild(bar);
-        });
-        return viz;
-    }
-
-    // ── Stat bar ──────────────────────────────────────────────────────────────────
-    function makeStatBar(value, max, color) {
-        const pct = max > 0 ? (value / max * 100).toFixed(1) : 0;
-        return `<div class="stat-bar-track"><div class="stat-bar-fill" style="width:${pct}%;--c:${color}"></div></div>`;
-    }
-
-    // ── Render results ────────────────────────────────────────────────────────────
-    function renderResults(results) {
-        if (!results.length) return;
-
-        const sorted = [...results].sort((a,b) => a.time - b.time);
-        const fastest = sorted[0];
-        const maxTime = Math.max(...results.map(r=>r.time));
-        const maxCmp  = Math.max(...results.map(r=>r.comparisons));
-        const maxSwp  = Math.max(...results.map(r=>r.swaps));
-
-        let html = "";
-
-        // Winner banner
-        html += `
-    <div class="winner-banner" style="border-color:${fastest.color};--c:${fastest.color}">
-      <div style="width:4px;height:52px;background:${fastest.color};border-radius:2px;flex-shrink:0"></div>
-      <div>
-        <div class="winner-label">FASTEST ALGORITHM</div>
-        <div class="winner-name" style="color:${fastest.color}">${fastest.name}</div>
-      </div>
-      <div style="flex:1"></div>
-      <div style="text-align:right">
-        <div class="winner-label">EXECUTION TIME</div>
-        <div class="winner-time" style="color:${fastest.color}">${fastest.time.toFixed(3)}<span class="winner-time-unit"> ms</span></div>
-      </div>
-      <div style="text-align:right;padding-left:24px;border-left:1px solid var(--border)">
-        <div class="winner-label">COMPARISONS</div>
-        <div class="winner-time" style="color:${fastest.color};font-size:26px">${fastest.comparisons.toLocaleString()}</div>
-      </div>
-    </div>`;
-
-        // Table header
-        html += `
-    <div class="section-label" style="margin-bottom:10px">Results</div>
-    <div class="results-header">
-      <span>ALGORITHM</span><span>TIME (ms)</span><span>COMPARISONS</span><span>SWAPS</span><span>ARRAY VIZ</span><span style="text-align:right">COMPLEXITY</span>
-    </div>`;
-
-        sorted.forEach((r, i) => {
-            const cx = COMPLEXITY[r.name];
-            const isFirst = i === 0;
-            const algoInfo = ALGORITHMS.find(a => a.label === r.name);
-            const color = algoInfo?.color || "#aaa";
-
-            html += `
-      <div class="result-card ${isFirst ? "rank1" : ""}" style="--c:${color};animation-delay:${i*0.06}s">
-        <div class="algo-label">
-          <div style="width:3px;height:32px;background:${color};border-radius:2px;flex-shrink:0"></div>
-          <div>
-            <div style="font-size:12px;font-weight:600;color:${color}">${r.name}</div>
-            ${isFirst ? `<span class="rank-badge" style="background:${color}20;color:${color}">FASTEST</span>` :
-                `<span class="rank-badge" style="background:var(--tag-bg);color:var(--muted)">#${i+1}</span>`}
-          </div>
-        </div>
-        <div>
-          <div class="stat-val">${r.time.toFixed(3)}</div>
-          ${makeStatBar(r.time, maxTime, color)}
-        </div>
-        <div>
-          <div class="stat-val" style="font-size:12px">${r.comparisons.toLocaleString()}</div>
-          ${makeStatBar(r.comparisons, maxCmp, color)}
-        </div>
-        <div>
-          <div class="stat-val" style="font-size:12px">${r.swaps > 0 ? r.swaps.toLocaleString() : '<span style="color:var(--muted)">—</span>'}</div>
-          ${makeStatBar(r.swaps, maxSwp, color)}
-        </div>
-        <div id="viz-${i}"></div>
-        <div class="cplx">
-          ${cx ? Object.entries(cx).map(([k,v]) => `<div><span class="k">${k} </span><strong>${v}</strong></div>`).join("") : ""}
-        </div>
-      </div>`;
-        });
-
-        // Summary cards
-        const totalTime = results.reduce((s,r) => s+r.time, 0);
-        const totalCmp  = results.reduce((s,r) => s+r.comparisons, 0);
-        const totalSwp  = results.reduce((s,r) => s+r.swaps, 0);
-
-        html += `
-    <div class="summary-grid">
-      <div class="summary-card" style="animation-delay:0.1s">
-        <div class="s-label">Algorithms Run</div>
-        <div class="s-value">${results.length}</div>
-      </div>
-      <div class="summary-card" style="animation-delay:0.2s">
-        <div class="s-label">Total Comparisons</div>
-        <div class="s-value" style="font-size:22px">${totalCmp.toLocaleString()}</div>
-      </div>
-      <div class="summary-card" style="animation-delay:0.3s">
-        <div class="s-label">Total Swaps</div>
-        <div class="s-value" style="font-size:22px">${totalSwp.toLocaleString()}</div>
-      </div>
-      <div class="summary-card" style="animation-delay:0.4s">
-        <div class="s-label">Total CPU Time</div>
-        <div class="s-value" style="font-size:22px">${totalTime.toFixed(2)}<span style="font-size:14px;font-family:'DM Mono'">ms</span></div>
-      </div>
-    </div>`;
-
-        // Complexity reference
-        const activeAlgos = ALGORITHMS.filter(a => selected.has(a.key));
-        html += `
-    <div class="cx-section">
-      <div class="section-label">Big-O Complexity Reference</div>
-      <div class="cx-grid">
-        ${activeAlgos.map((a,i) => {
-            const cx = COMPLEXITY[a.label];
-            return `
-            <div class="cx-card" style="--c:${a.color};animation-delay:${i*0.06}s">
-              <div class="cx-name">${a.label}</div>
-              ${cx ? Object.entries(cx).map(([k,v]) => `
-                <div class="cx-row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join("") : ""}
-            </div>`;
-        }).join("")}
-      </div>
-    </div>`;
-
-        mainContent.innerHTML = html;
-
-        // Inject array visualizations (can't do in innerHTML due to canvas)
-        sorted.forEach((r, i) => {
-            const container = document.getElementById(`viz-${i}`);
-            if (container) container.appendChild(makeViz(r.sorted, r.color));
-        });
-    }
-
-    // ── Run ───────────────────────────────────────────────────────────────────────
-    runBtn.addEventListener("click", async () => {
-        if (isRunning || selected.size === 0) return;
-        isRunning = true;
-        runBtn.disabled = true;
-        runBtn.classList.add("running");
-        runBtn.textContent = "● RUNNING...";
-        setStatus(true);
-        logBox.innerHTML = "";
-
-        log(`► Generating ${arraySize.toLocaleString()} element ${arrayType} array...`, "log-run");
-        await sleep(30);
-
-        const base = generateArray(arraySize, arrayType);
-        log(`✓ Array ready. Running ${selected.size} algorithm(s).`, "log-ok");
-        await sleep(20);
-
-        const results = [];
-        for (const algo of ALGORITHMS) {
-            if (!selected.has(algo.key)) continue;
-            log(`  ↳ ${algo.label}...`);
-            await sleep(10);
-            const res = FN_MAP[algo.key](base);
-            results.push({ ...res, color: algo.color });
-            log(`    ✓ ${res.time.toFixed(3)}ms | ${res.comparisons.toLocaleString()} comparisons`, "log-ok");
-            await sleep(15);
+    // ── Step recorders ────────────────────────────────────────────────────────────
+    function recordBubble(arr){
+        const a=[...arr];const steps=[];
+        for(let i=0;i<a.length;i++){
+            for(let j=0;j<a.length-i-1;j++){
+                steps.push({type:"compare",i:j,j:j+1,arr:[...a],desc:`[${j}]=${a[j]}  vs  [${j+1}]=${a[j+1]}`});
+                if(a[j]>a[j+1]){[a[j],a[j+1]]=[a[j+1],a[j]];steps.push({type:"swap",i:j,j:j+1,arr:[...a],desc:`Swap positions ${j} ↔ ${j+1}  →  ${a[j]}, ${a[j+1]}`});}
+            }
+            steps.push({type:"sorted_range",from:a.length-i-1,to:a.length-1,arr:[...a]});
         }
+        steps.push({type:"done",arr:[...a]});
+        return{steps,sorted:a};
+    }
+    function recordSelection(arr){
+        const a=[...arr];const steps=[];
+        for(let i=0;i<a.length-1;i++){
+            let m=i;
+            for(let j=i+1;j<a.length;j++){
+                steps.push({type:"compare",i:m,j:j,arr:[...a],desc:`Min=[${m}]=${a[m]}  vs  [${j}]=${a[j]}`});
+                if(a[j]<a[m])m=j;
+            }
+            if(m!==i){[a[i],a[m]]=[a[m],a[i]];steps.push({type:"swap",i:i,j:m,arr:[...a],desc:`Swap min [${m}] ↔ [${i}]  →  ${a[i]}, ${a[m]}`});}
+            steps.push({type:"sorted_range",from:i,to:i,arr:[...a]});
+        }
+        steps.push({type:"done",arr:[...a]});
+        return{steps,sorted:a};
+    }
+    function recordInsertion(arr){
+        const a=[...arr];const steps=[];
+        for(let i=1;i<a.length;i++){
+            let k=a[i],j=i-1;
+            while(j>=0&&a[j]>k){
+                steps.push({type:"compare",i:j,j:j+1,arr:[...a],desc:`[${j}]=${a[j]} > key=${k}  →  shift right`});
+                a[j+1]=a[j];j--;
+                steps.push({type:"swap",i:j+1,j:j+2,arr:[...a],desc:`Shift ${a[j+1]} to position ${j+2}`});
+            }
+            a[j+1]=k;
+            steps.push({type:"sorted_range",from:0,to:i,arr:[...a],desc:`Insert key=${k} at [${j+1}]`});
+        }
+        steps.push({type:"done",arr:[...a]});
+        return{steps,sorted:a};
+    }
+    function recordMerge(arr){
+        const a=[...arr];const steps=[];
+        function merge(lo,mid,hi){
+            const L=a.slice(lo,mid+1),R=a.slice(mid+1,hi+1);
+            let i=0,j=0,k=lo;
+            while(i<L.length&&j<R.length){
+                steps.push({type:"compare",i:lo+i,j:mid+1+j,arr:[...a],desc:`L[${i}]=${L[i]}  vs  R[${j}]=${R[j]}`});
+                if(L[i]<=R[j])a[k++]=L[i++];else a[k++]=R[j++];
+                steps.push({type:"swap",i:k-1,j:k-1,arr:[...a],desc:`Place ${a[k-1]} at index ${k-1}`});
+            }
+            while(i<L.length){a[k++]=L[i++];steps.push({type:"swap",i:k-1,j:k-1,arr:[...a],desc:`Place ${a[k-1]} at index ${k-1}`});}
+            while(j<R.length){a[k++]=R[j++];steps.push({type:"swap",i:k-1,j:k-1,arr:[...a],desc:`Place ${a[k-1]} at index ${k-1}`});}
+        }
+        function ms(lo,hi){
+            if(lo>=hi)return;
+            const mid=Math.floor((lo+hi)/2);
+            ms(lo,mid);ms(mid+1,hi);merge(lo,mid,hi);
+            steps.push({type:"sorted_range",from:lo,to:hi,arr:[...a]});
+        }
+        ms(0,a.length-1);
+        steps.push({type:"done",arr:[...a]});
+        return{steps,sorted:a};
+    }
+    function recordQuick(arr){
+        const a=[...arr];const steps=[];
+        function partition(lo,hi){
+            const pv=a[hi];
+            steps.push({type:"pivot",i:hi,arr:[...a],desc:`Pivot = [${hi}] = ${pv}`});
+            let i=lo-1;
+            for(let j=lo;j<hi;j++){
+                steps.push({type:"compare",i:j,j:hi,arr:[...a],desc:`[${j}]=${a[j]}  vs  pivot=${pv}`});
+                if(a[j]<pv){i++;if(i!==j){[a[i],a[j]]=[a[j],a[i]];steps.push({type:"swap",i:i,j:j,arr:[...a],desc:`Swap [${i}] ↔ [${j}]  →  ${a[i]}, ${a[j]}`});}}
+            }
+            [a[i+1],a[hi]]=[a[hi],a[i+1]];
+            steps.push({type:"swap",i:i+1,j:hi,arr:[...a],desc:`Place pivot ${a[i+1]} at [${i+1}]`});
+            return i+1;
+        }
+        function qs(lo,hi){
+            if(lo>=hi){if(lo===hi)steps.push({type:"sorted_range",from:lo,to:lo,arr:[...a]});return;}
+            const p=partition(lo,hi);
+            steps.push({type:"sorted_range",from:p,to:p,arr:[...a]});
+            qs(lo,p-1);qs(p+1,hi);
+        }
+        qs(0,a.length-1);
+        steps.push({type:"done",arr:[...a]});
+        return{steps,sorted:a};
+    }
+    const REC_MAP={bubble:recordBubble,selection:recordSelection,insertion:recordInsertion,merge:recordMerge,quick:recordQuick};
 
-        log(`► Done. Results rendered below.`, "log-run");
-        renderResults(results);
+    function log(msg,cls=""){
+        const line=document.createElement("div");
+        if(cls)line.className=cls;
+        line.textContent=msg;
+        if(logBox.children[0]?.style?.color)logBox.innerHTML="";
+        logBox.appendChild(line);logBox.scrollTop=logBox.scrollHeight;
+    }
+    function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 
-        isRunning = false;
-        runBtn.disabled = false;
-        runBtn.classList.remove("running");
-        runBtn.textContent = "▶  RUN ANALYSIS";
-        setStatus(false);
+    // ── Build viz section ─────────────────────────────────────────────────────────
+    function buildVizSection(name,color){
+        const id=name.replace(/\s/g,"_");
+        const wrap=document.createElement("div");
+        wrap.className="viz-section";
+        wrap.innerHTML=`
+  <div class="viz-header">
+    <div class="viz-title" style="color:${color}">${name}</div>
+    <div class="viz-stats">
+      <div class="vs-item">
+        <div class="vs-label">COMPARISONS</div>
+        <div class="vs-val" id="cmp-${id}" style="color:${color}">0</div>
+      </div>
+      <div class="vs-item">
+        <div class="vs-label">SWAPS</div>
+        <div class="vs-val" id="swp-${id}" style="color:${color}">0</div>
+      </div>
+      <div class="vs-item">
+        <div class="vs-label">TIME</div>
+        <div class="vs-val" id="time-${id}" style="color:${color}">–</div>
+      </div>
+    </div>
+  </div>
+  <div class="legend">
+    <div class="leg-item"><div class="leg-dot" style="background:#333;border:1px solid #555"></div>Default</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#ffa502"></div>Comparing</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#ff4757"></div>Swapping</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#a55eea"></div>Pivot</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#2ed573"></div>Sorted</div>
+  </div>
+  <div class="step-bar">
+    <span class="step-tag compare" id="stag-${id}">WAITING</span>
+    <span class="step-action" id="sdesc-${id}">–</span>
+    <span id="sstep-${id}" style="font-family:'Syne Mono',monospace;font-size:8px;color:var(--muted)">0 / 0</span>
+  </div>
+  <div class="ctrl-row">
+    <div class="progress-wrap"><div class="progress-fill" id="prog-${id}" style="background:${color};width:0%"></div></div>
+    <div class="progress-label" id="plabel-${id}">0%</div>
+  </div>
+  <div class="num-array-wrap">
+    <div class="num-array" id="arr-${id}"></div>
+  </div>`;
+        return wrap;
+    }
+
+    function renderCells(containerId,arr,color,highlights={}){
+        const container=document.getElementById(containerId);
+        if(!container)return;
+        const barH=h=>Math.max(10,Math.round((h/MAX_VAL)*80));
+        if(container.children.length===arr.length){
+            Array.from(container.children).forEach((cell,i)=>{
+                const bar=cell.querySelector(".num-bar");
+                const val=cell.querySelector(".num-val");
+                bar.style.height=barH(arr[i])+"px";
+                val.textContent=arr[i];
+                cell.className="num-cell";
+                if(highlights.sorted&&highlights.sorted.has(i)) cell.classList.add("sorted");
+                else if(highlights.pivot===i) cell.classList.add("pivot");
+                else if(highlights.swapping&&(highlights.swapping[0]===i||highlights.swapping[1]===i)) cell.classList.add("swapping");
+                else if(highlights.comparing&&(highlights.comparing[0]===i||highlights.comparing[1]===i)) cell.classList.add("comparing");
+            });
+            return;
+        }
+        container.innerHTML="";
+        arr.forEach((v,i)=>{
+            const cell=document.createElement("div");
+            cell.className="num-cell";
+            if(highlights.sorted&&highlights.sorted.has(i)) cell.classList.add("sorted");
+            else if(highlights.comparing&&(highlights.comparing[0]===i||highlights.comparing[1]===i)) cell.classList.add("comparing");
+            else if(highlights.swapping&&(highlights.swapping[0]===i||highlights.swapping[1]===i)) cell.classList.add("swapping");
+            cell.innerHTML=`
+      <div class="num-bar" style="height:${barH(v)}px;background:${color};opacity:0.65"></div>
+      <div class="num-val">${v}</div>
+      <div class="num-idx">${i}</div>`;
+            container.appendChild(cell);
+        });
+    }
+
+    async function animateAlgo(algoInfo,arr){
+        const {label:name,color,key}=algoInfo;
+        const id=name.replace(/\s/g,"_");
+        const {steps,sorted}=REC_MAP[key](arr);
+        const cmpEl=document.getElementById("cmp-"+id);
+        const swpEl=document.getElementById("swp-"+id);
+        const timeEl=document.getElementById("time-"+id);
+        const stagEl=document.getElementById("stag-"+id);
+        const sdescEl=document.getElementById("sdesc-"+id);
+        const sstepEl=document.getElementById("sstep-"+id);
+        const progEl=document.getElementById("prog-"+id);
+        const plabelEl=document.getElementById("plabel-"+id);
+        let cmps=0,swps=0,sortedSet=new Set();
+        const t0=performance.now();
+        renderCells("arr-"+id,arr,color,{});
+        for(let si=0;si<steps.length;si++){
+            const step=steps[si];
+            const pct=Math.round(si/steps.length*100);
+            if(progEl)progEl.style.width=pct+"%";
+            if(plabelEl)plabelEl.textContent=pct+"%";
+            if(sstepEl)sstepEl.textContent=`${si+1} / ${steps.length}`;
+            if(step.type==="compare"){
+                cmps++;if(cmpEl)cmpEl.textContent=cmps;
+                if(stagEl){stagEl.textContent="COMPARE";stagEl.className="step-tag compare";}
+                if(sdescEl)sdescEl.textContent=step.desc||"";
+                renderCells("arr-"+id,step.arr,color,{comparing:[step.i,step.j],sorted:sortedSet});
+                await sleep(vizSpeedMs);
+            }else if(step.type==="swap"){
+                swps++;if(swpEl)swpEl.textContent=swps;
+                if(stagEl){stagEl.textContent="SWAP";stagEl.className="step-tag swap";}
+                if(sdescEl)sdescEl.textContent=step.desc||"";
+                renderCells("arr-"+id,step.arr,color,{swapping:[step.i,step.j],sorted:sortedSet});
+                await sleep(vizSpeedMs);
+            }else if(step.type==="pivot"){
+                if(stagEl){stagEl.textContent="PIVOT";stagEl.className="step-tag pivot";}
+                if(sdescEl)sdescEl.textContent=step.desc||"";
+                renderCells("arr-"+id,step.arr,color,{pivot:step.i,sorted:sortedSet});
+                await sleep(vizSpeedMs);
+            }else if(step.type==="sorted_range"){
+                const from=step.from!==undefined?step.from:0;
+                const to=step.to!==undefined?step.to:step.from;
+                for(let x=from;x<=to;x++)sortedSet.add(x);
+                renderCells("arr-"+id,step.arr,color,{sorted:sortedSet});
+                if(vizSpeedMs>20)await sleep(Math.round(vizSpeedMs/3));
+            }else if(step.type==="done"){
+                for(let x=0;x<step.arr.length;x++)sortedSet.add(x);
+                if(stagEl){stagEl.textContent="DONE";stagEl.className="step-tag done";}
+                if(sdescEl)sdescEl.textContent="Array fully sorted!";
+                renderCells("arr-"+id,step.arr,color,{sorted:sortedSet});
+                if(progEl)progEl.style.width="100%";
+                if(plabelEl)plabelEl.textContent="100%";
+            }
+        }
+        const elapsed=performance.now()-t0;
+        if(timeEl)timeEl.textContent=elapsed.toFixed(0)+"ms";
+        return{name,color,time:elapsed,comparisons:cmps,swaps:swps,sorted};
+    }
+
+    runBtn.addEventListener("click",async()=>{
+        if(isRunning||selected.size===0)return;
+        isRunning=true;runBtn.disabled=true;runBtn.classList.add("running");
+        runBtn.textContent="● RUNNING...";
+        statusPill.className="pill live";statusPill.textContent="Running...";
+        logBox.innerHTML="";
+        const baseArr=generateArray(arraySize,arrayType);
+        log(`► Array [${arraySize}] type=${arrayType}: [${baseArr.slice(0,10).join(", ")}${arraySize>10?"…":"]"}`, "log-run");
+        log(`  Values: 1–${MAX_VAL} | Speed: ${vizSpeedMs}ms/step`,"log-info");
+        mainContent.innerHTML="";
+        const vizArea=document.createElement("div");
+        vizArea.style.cssText="display:flex;flex-direction:column;gap:16px";
+        const selectedAlgos=ALGORITHMS.filter(a=>selected.has(a.key));
+        selectedAlgos.forEach(a=>{
+            const wrap=buildVizSection(a.label,a.color);
+            vizArea.appendChild(wrap);
+        });
+        mainContent.appendChild(vizArea);
+        selectedAlgos.forEach(a=>renderCells("arr-"+a.label.replace(/\s/g,"_"),baseArr,a.color,{}));
+        const results=[];
+        for(const a of selectedAlgos){
+            log(`  ↳ ${a.label}...`,"log-info");
+            const res=await animateAlgo(a,baseArr);
+            results.push(res);
+            log(`    ✓ ${res.time.toFixed(0)}ms | ${res.comparisons.toLocaleString()} compares | ${res.swaps} swaps`,"log-ok");
+        }
+        renderSummary(results,selectedAlgos);
+        log(`► All done! Results below.`,"log-run");
+        isRunning=false;runBtn.disabled=false;runBtn.classList.remove("running");
+        runBtn.textContent="▶  RUN ANALYSIS";
+        statusPill.className="pill";statusPill.textContent="Ready";
     });
 
-    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+    function renderSummary(results,algos){
+        const sorted=[...results].sort((a,b)=>a.time-b.time);
+        const fastest=sorted[0];
+        const maxTime=Math.max(...results.map(r=>r.time));
+        const maxCmp=Math.max(...results.map(r=>r.comparisons));
+        const maxSwp=Math.max(...results.map(r=>r.swaps));
+        const section=document.createElement("div");
+        section.style.cssText="margin-top:28px;padding-top:24px;border-top:1px solid var(--border)";
+        let html=`
+  <div class="sec-label" style="margin-bottom:14px">Performance Summary</div>
+  <div class="winner-card" style="--c:${fastest.color};border-color:${fastest.color}">
+    <div class="wc-bar"></div>
+    <div><div class="wc-label">FASTEST ALGORITHM</div><div class="wc-name">${fastest.name}</div></div>
+    <div class="wc-spacer"></div>
+    <div style="text-align:right"><div class="wc-label">TIME</div><div class="wc-time" style="color:${fastest.color}">${fastest.time.toFixed(1)}<span class="wc-unit">ms</span></div></div>
+    <div style="text-align:right;padding-left:20px;border-left:1px solid var(--border)">
+      <div class="wc-label">COMPARISONS</div>
+      <div class="wc-time" style="color:${fastest.color};font-size:22px">${fastest.comparisons.toLocaleString()}</div>
+    </div>
+  </div>
+  <div class="res-header"><span>ALGORITHM</span><span>TIME</span><span>COMPARISONS</span><span>SWAPS</span><span style="text-align:right">COMPLEXITY</span></div>`;
+        sorted.forEach((r,i)=>{
+            const cx=COMPLEXITY[r.name];const isFirst=i===0;
+            html+=`<div class="res-card${isFirst?" rank1":""}" style="--c:${r.color};animation-delay:${i*0.06}s">
+      <div class="rank-label">
+        <div class="r-dot" style="background:${r.color};box-shadow:0 0 8px ${r.color}"></div>
+        <div><div class="r-name" style="color:${r.color}">${r.name}</div><span class="r-badge${isFirst?" first":""}">${isFirst?"FASTEST":"#"+(i+1)}</span></div>
+      </div>
+      <div><div class="stat-v">${r.time.toFixed(1)}ms</div><div class="sbar-track"><div class="sbar-fill" style="width:${maxTime>0?r.time/maxTime*100:0}%;background:${r.color}"></div></div></div>
+      <div><div class="stat-v" style="font-size:12px">${r.comparisons.toLocaleString()}</div><div class="sbar-track"><div class="sbar-fill" style="width:${maxCmp>0?r.comparisons/maxCmp*100:0}%;background:${r.color}"></div></div></div>
+      <div><div class="stat-v" style="font-size:12px">${r.swaps>0?r.swaps.toLocaleString():'<span style="color:var(--muted)">—</span>'}</div><div class="sbar-track"><div class="sbar-fill" style="width:${maxSwp>0?r.swaps/maxSwp*100:0}%;background:${r.color}"></div></div></div>
+      <div class="cplx-col">${cx?Object.entries(cx).map(([k,v])=>`<div><span class="k">${k} </span><strong>${v}</strong></div>`).join(""):""}</div>
+    </div>`;
+        });
+        const tTime=results.reduce((s,r)=>s+r.time,0);
+        const tCmp=results.reduce((s,r)=>s+r.comparisons,0);
+        const tSwp=results.reduce((s,r)=>s+r.swaps,0);
+        html+=`<div class="sum-grid">
+    <div class="sum-card" style="animation-delay:0.1s"><div class="sl">Algorithms</div><div class="sv">${results.length}</div></div>
+    <div class="sum-card" style="animation-delay:0.2s"><div class="sl">Total Compares</div><div class="sv" style="font-size:20px">${tCmp.toLocaleString()}</div></div>
+    <div class="sum-card" style="animation-delay:0.3s"><div class="sl">Total Swaps</div><div class="sv" style="font-size:20px">${tSwp.toLocaleString()}</div></div>
+    <div class="sum-card" style="animation-delay:0.4s"><div class="sl">Total CPU Time</div><div class="sv" style="font-size:20px">${tTime.toFixed(1)}<span style="font-size:12px;font-family:'Syne Mono'">ms</span></div></div>
+  </div>
+  <div class="cx-section">
+    <div class="sec-label">Big-O Reference</div>
+    <div class="cx-grid">
+      ${algos.map((a,i)=>{const cx=COMPLEXITY[a.label];return`<div class="cx-card" style="--c:${a.color};animation-delay:${i*0.06}s"><div class="cx-name">${a.label}</div>${cx?Object.entries(cx).map(([k,v])=>`<div class="cx-row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join(""):""}</div>`;}).join("")}
+    </div>
+  </div>`;
+        section.innerHTML=html;
+        mainContent.appendChild(section);
+    }
 </script>
 </body>
 </html>
